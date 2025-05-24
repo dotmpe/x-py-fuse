@@ -1,0 +1,16 @@
+{
+  "root": {
+    "dir1": {
+      "file1.txt": {
+        "content": "SGVsbG8sIHdvcmxkIQ==",
+        "encoding": "base64",
+        "permissions": "rw-r--r--"
+      }
+    },
+    "file2.txt": {
+      "content": "Another file",
+      "encoding": "text",
+      "permissions": "rwxr-xr-x"
+    }
+  }
+}

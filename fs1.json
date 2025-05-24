@@ -1,0 +1,33 @@
+{
+  "contents": {
+    "dir1": {
+      "contents": {
+        "file1.txt": {
+          "data": "SGVsbG8sIHdvcmxkIQ==",
+          "size": 13,
+          "encoding": "base64",
+          "permissions": "rw-r--r--"
+        },
+        "file2.txt": {
+          "data": "Text",
+          "size": 4,
+          "encoding": "text",
+          "permissions": "rw-rw-rw-"
+        }
+      }
+    },
+    "file2.txt": {
+      "data": "Another file",
+      "size": 12,
+      "encoding": "text",
+      "permissions": "rwxr-xr-x"
+    },
+    "link1": {
+      "target": "dir1/file1.txt"
+    },
+    "dir2": {
+      "contents": {
+      }
+    }
+  }
+}
