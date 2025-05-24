@@ -6,10 +6,19 @@ import sys
 import base64
 from datetime import datetime
 from fuse import FUSE, Operations, FuseOSError
+from fs.permissions import Permissions
+
+
+def get_st_mode(perm_str, file_type):
+    perms = Permissions.parse(perm_str)
+    return file_type | perms.mode
+
 
 class FSObjectStoreA(object): pass
 
+
 class FSObjectStoreB(object):
+
     def __init__(self, data):
         self.fs = data
 
@@ -21,10 +30,13 @@ class FSObjectStoreB(object):
             node = node['contents'][part]
         return node
 
+
 class NodeFS(Operations):
+
     """
     A barely minimal read-only filesystem working directly from a dict.
     """
+
     def __init__(self, store):
         super(NodeFS, self).__init__()
         self.store = store
@@ -75,19 +87,24 @@ class NodeFS(Operations):
             st_uid = 1000,
             st_gid = 1000
         )
+        perm_str = node.get('permissions', None)
+        if perm_str:
+            pmode = Permissions.parse(perm_str).mode
+        else:
+            pmode = (target or 'data' in node) and 0o644 or 0o755
         if target:
             st.update(dict(
-                st_mode = stat.S_IFLNK | 0o644,
+                st_mode = stat.S_IFLNK | pmode,
                 st_nlink = 1
             ))
         elif node.get('data', None):
             st.update(dict(
-                st_mode = stat.S_IFREG | 0o644,
+                st_mode = stat.S_IFREG | pmode,
                 st_size = node.get('size', 0),
                 st_nlink = 1
             ))
         else:
-            st['st_mode'] = stat.S_IFDIR | 0o755
+            st['st_mode'] = stat.S_IFDIR | pmode
             st['st_nlink'] = 2
         return st
 
