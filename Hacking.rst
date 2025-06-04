@@ -1,18 +1,11 @@
 Using a Python virtual env (I always forget how to do this part)
 ::
 
-  python3.8 -m venv .venv
+  python -m venv .venv
   pip install -r requirements.txt
 
+See `TODO <TODO.txt>`_ for pending/closed tasks.
 
-To-Do
-------
-- Replace current loglines with something better like a debug wrapper
-  or explore FUSE debug options
-- Implement hidden file to dump JSON after writing/updating
-- Implement writing: files, symlinks
-- Implement handles (open{,dir})
-- Implement xattr
 
 Issues
 ------

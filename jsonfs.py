@@ -1,11 +1,14 @@
+import argparse
+import base64
 import errno
 import json
+import logging
 import os
 import stat
 import sys
-import base64
+
 from datetime import datetime
-from fuse import FUSE, Operations, FuseOSError
+from fuse import FUSE, FuseOSError, LoggingMixIn, Operations
 from fs.permissions import Permissions
 
 
@@ -98,6 +101,7 @@ class NodeFS(Operations):
     def __init__(self, store):
         super(NodeFS, self).__init__()
         self.store = store
+        print(self.store)
 
     def get_node(self, path):
         try:
@@ -109,7 +113,6 @@ class NodeFS(Operations):
                 raise FuseOSError(errno.ENOENT)
 
     def access(self, path, amode):
-        print(f"Access {path}, {amode}")
         if amode & os.F_OK or amode & os.R_OK:
             try:
                 self.store.get_node(path)
@@ -122,17 +125,14 @@ class NodeFS(Operations):
         return 0
 
     def chmod(self, path, mode):
-        print(f"Chmod {path}, {mode}")
         return super(NodeFS, self).chmod(path, mode)
         #raise FuseOSError(errno.ENOTSUP)
 
     def chown(self, path, uid, gid):
-        print(f"Chown {path}, {uid}, {gid}")
         return super(NodeFS, self).chown(path, uid, gid)
         #raise FuseOSError(errno.ENOTSUP)
 
     def create(self, path, mode, fi=None):
-        print(f"Create {path} mode {mode} fi {fi}")
         #node = self.store.get_node(path)
         #full_path = self._full_path(path)
         #return os.open(full_path, os.O_WRONLY | os.O_CREAT, mode)
@@ -140,23 +140,18 @@ class NodeFS(Operations):
         return super(NodeFS, self).create(path, mode, fi)
 
     def destroy(self, path):
-        print(f"destroy {path}")
         return super(NodeFS, self).destroy(path)
 
     def flush(self, path, fh):
-        print(f"flush {path}")
         return super(NodeFS, self).flush(path, fh)
 
     def fsync(self, path, datasync, fh):
-        print(f"fsync {path}")
         return super(NodeFS, self).fsync(path, datasync, fh)
 
     def fsyncdir(self, path, datasync, fh):
-        print(f"fsyncdir {path}")
         return super(NodeFS, self).fsyncdir(path, datasync, fh)
 
     def getattr(self, path, fh=None):
-        print(f"GetAttr {path} fh {fh}")
         node = self.get_node(path)
         target = node.get('target', None)
         dt = datetime.timestamp(datetime.now())
@@ -196,27 +191,21 @@ class NodeFS(Operations):
         return st
 
     def getxattr(self, path, name, position=0):
-        print(f"getxattr {path} {name} {position}")
         return super(NodeFS, self).getxattr(path, name, position=0)
 
     def init(self, path):
-        print(f"init {path}")
         return super(NodeFS, self).init(path)
 
     def ioctl(self, path, cmd, arg, fip, flags, data):
-        print(f"ioctl {path}")
         return super(NodeFS, self).ioctl(path, cmd, arg, fip, flags, data)
 
     def link(self, target, source):
-        print(f"link {target} {source}")
         return super(NodeFS, self).link(target, source)
 
     def listxattr(self, path):
-        print(f"listxattr {path}")
         return super(NodeFS, self).listxattr(path)
 
     def mkdir(self, path, mode):
-        print(f"MkDir {path} mode {mode}")
         #self.store.put_node(path, permissions=str(p))
         node = self.store.fs
         path = path.strip('/').split('/')
@@ -232,11 +221,9 @@ class NodeFS(Operations):
         )
 
     def mknod(self, path, mode, dev):
-        print(f"MkNod {path} mode {mode} dev {dev}")
         raise FuseOSError(errno.ENOTSUP)
 
     def open(self, path, flags):
-        print(f"Open {path} flags {flags}")
         return super(NodeFS, self).open(path, flags)
         #raise FuseOSError(errno.ENOTSUP)
         #node = self.store.get_node(path)
@@ -247,12 +234,10 @@ class NodeFS(Operations):
     #        return 0
 
     def opendir(self, path):
-        print(f"opendir {path}")
         return super(NodeFS, self).opendir(path)
 
     def read(self, path, size, offset, fh):
         node = self.get_node(path)
-        print(f"Read path {path} {size} {offset} {fh}")
         if not node.get('data', None):
             cb = node.get('cb', None)
             if cb:
@@ -272,7 +257,6 @@ class NodeFS(Operations):
 
     def readdir(self, path, offset):
         node = self.get_node(path)
-        print(f"Read dir {path} {offset}")
         if node.get('data', None):
             raise OSError(errno.ENOTDIR, path)
         return ['.', '..'] + list(node['entries'].keys())
@@ -286,58 +270,120 @@ class NodeFS(Operations):
         return target
 
     def release(self, path, fh):
-        print(f"release {path} {fh}")
         return super(NodeFS, self).release(path, fh)
 
     def releasedir(self, path, fh):
-        print(f"releasedir {path} {fh}")
         return super(NodeFS, self).releasedir(path, fh)
 
     def removexattr(self, path, name):
-        print(f"removexattr {path} {name}")
         return super(NodeFS, self).removexattr(path, name)
 
     def rename(self, old, new):
-        print(f"rename {old} {new}")
         return super(NodeFS, self).rename(old, new)
 
     def rmdir(self, path):
-        print(f"RmDir {path}")
         raise FuseOSError(errno.ENOTSUP)
 
     def setxattr(self, path, name, value, options, position=0):
-        print(f"setxattr {path} {name} {value} {options} {position}")
         return super(NodeFS, self).setxattr(path, name, value, options, position=0)
 
     def statfs(self, path):
-        print(f"StatFs {path}")
         raise FuseOSError(errno.ENOTSUP)
 
     def symlink(self, target, source):
-        print(f"symlink {target} {source}")
         return super(NodeFS, self).symlink(target, source)
 
     def truncate(self, path, length, fh=None):
-        print(f"Truncate {path} length {length} fh {fh}")
         raise FuseOSError(errno.ENOTSUP)
 
     def utimens(self, path, times=None):
-        print(f"UtimeNs {path} times {times}")
         raise FuseOSError(errno.ENOTSUP)
 
     def write(self, path, buf, offset, fh):
-        print(f"Write {path} buf {buf} offset {offset} fh {fh}")
         raise FuseOSError(errno.ENOTSUP)
 
+
+class DebugNodeFS(LoggingMixIn, NodeFS): pass
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+            description="Synthetic filesystem with in-memory backend loaded fromJSON")
+
+    parser.add_argument("-d", "--debug", action="store_true",
+            help="Enable debug logging")
+
+    parser.add_argument("-L", "--log-file", action="store_true",
+            help="Set log file (default: %(log_file)s)")
+    parser.add_argument("-s", "--stderr", action="store_true",
+            help="Enable logging to standard error")
+    parser.add_argument("-S", "--syslog", action="store_true",
+            help="Enable logging to system")
+    parser.add_argument("--log-level", default=os.getenv("LOG_LEVEL", "ERROR"),
+            help="Set log level (DEBUG, INFO, WARNING, ERROR, CRITICAL; default, via env LOG_LEVEL: %(default)s)")
+
+    parser.add_argument("json_path", default='fs.json', nargs='?',
+            help="JSON file backend (default: %(default)s)")
+    parser.add_argument("mount_point", default='/mnt/jsonfs', nargs='?',
+            help="Mount point for the filesystem (default: %(default)s)")
+    return parser.parse_args()
+
+
+def setup_logging(output=None, log_file='fs.log', threshold_level='ERROR',
+        syslog=False):
+
+    """
+    Setup pythong logging library. Note: to get LoggingMixIn events, threshold
+    must be at DEBUG.
+    """
+
+    level_map = {
+        "DEBUG": logging.DEBUG,
+        "INFO": logging.INFO,
+        "WARNING": logging.WARNING,
+        "ERROR": logging.ERROR,
+        "CRITICAL": logging.CRITICAL
+    }
+    log_level = level_map[threshold_level.upper()]
+
+    # Custom formatter to include PID and process name
+    class CustomFormatter(logging.Formatter):
+        def format(self, record):
+            # Add PID and process name to the log record
+            record.pid = os.getpid()
+            try:
+                record.process_name = psutil.Process(record.pid).name()
+            except psutil.NoSuchProcess:
+                record.process_name = "unknown"
+            return super().format(record)
+
+    formatter = CustomFormatter(
+        "%(asctime)s [%(levelname)s] [PID:%(pid)s/%(process_name)s] %(message)s"
+    )
+    handlers = [
+        logging.FileHandler(log_file)
+    ]
+    if output:
+        handlers.append(logging.StreamHandler(output))
+    if syslog:
+        handlers.append(logging.handlers.SysLogHandler('/dev/log'))
+    for handler in handlers:
+        handler.setFormatter(formatter)
+    logging.basicConfig(level=log_level, handlers=handlers)
+
+
 if __name__ == '__main__':
-    if len(sys.argv) > 3:
-        raise Exception("No more than 2 arguments expected")
-    args = iter(sys.argv[1:])
-    json_path = next(args, 'fs.json')
-    mnt_point = next(args, '/mnt/jsonfs')
-    if not os.path.isdir(mnt_point):
-        raise Exception(f"No such directory {mnt_point}")
-    with open(json_path, 'r') as f:
+    args = parse_args()
+    if not os.path.isdir(args.mount_point):
+        raise Exception(f"No such directory {args.mount_point}")
+    with open(args.json_path, 'r') as f:
         store = FSObjectStoreB(json.load(f))
-    FUSE(NodeFS(store), mnt_point, nothreads=True, foreground=True,
+    if args.debug:
+        setup_logging()
+        fs_class = DebugNodeFS
+    else:
+        fs_class = NodeFS
+    FUSE(fs_class(store), args.mount_point,
+            nothreads=True,
+            foreground=True,
             direct_io=True)

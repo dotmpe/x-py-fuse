@@ -1,0 +1,6 @@
+x (A) 2025-05-26 2025-05-27 Replace print-lines with logger and add debug flag argument
+(B) 2025-05-26 Implement hidden file to dump JSON after writing/updating? Or better use destroy in some way.
+(B) 2025-05-26 Implement writing: files, symlinks
+(C) 2025-05-26 Implement handle (open{,dir})
+(D) 2025-05-26 Implement xattr
+(F) 2025-05-24 Thinking about different types of JSON backends (FSObjectStore{A,B}) for different levels of descriptor data
